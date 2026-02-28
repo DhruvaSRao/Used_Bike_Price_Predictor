@@ -52,11 +52,11 @@ def build_input(brand, city, owner, age, kms_driven, power):
     return pd.DataFrame([[
         kms_driven, owner_enc, age, power,
         brand_enc, city_enc,
-        kms_driven / (age + 1),   # km_per_year
-        power / (age + 1),         # power_per_age
-        age ** 2,                  # age_squared
-        kms_driven ** 2,           # km_squared
-        power * age,               # power_x_age
+        kms_driven / (age + 1),
+        power / (age + 1),
+        age ** 2,
+        kms_driven ** 2,
+        power * age,
         int(owner == "First Owner"),
         int(kms_driven > 50000),
         int(age <= 2),
@@ -78,10 +78,10 @@ if predict_btn:
                     padding: 2rem; border-radius: 16px; text-align: center;'>
             <p style='color: #aaa; margin: 0;'>Estimated Market Price</p>
             <h1 style='color: #e94560; font-size: 3rem; margin: 0.5rem 0;'>
-                ₹{price:,.0f}
+                Rs {price:,.0f}
             </h1>
             <p style='color: #888;'>
-                Confidence Range: ₹{price - margin:,.0f} – ₹{price + margin:,.0f}
+                Confidence Range: Rs {price - margin:,.0f} - Rs {price + margin:,.0f}
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -102,31 +102,31 @@ if predict_btn:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### 🧠 Why this price? (SHAP Waterfall)")
-        shap_values = explainer(input_df)
-
-        fig, ax = plt.subplots(figsize=(8, 5))
-        shap.plots.waterfall(shap_values[0], max_display=10, show=False)
-        plt.title("Feature contributions to predicted price", fontsize=11)
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close()
-
-    with col2:
-        st.markdown("### 📊 Feature Impact (SHAP Bar)")
+        st.markdown("### 🧠 Why this price? (SHAP Explanation)")
         shap_vals = explainer.shap_values(input_df)[0]
         shap_df = pd.DataFrame({
             "Feature":    features,
             "SHAP Value": shap_vals
         }).sort_values("SHAP Value", key=abs, ascending=True).tail(10)
 
-        fig2, ax2 = plt.subplots(figsize=(8, 5))
+        fig, ax = plt.subplots(figsize=(8, 5))
         colors = ["#e94560" if v > 0 else "#2ecc71" for v in shap_df["SHAP Value"]]
-        ax2.barh(shap_df["Feature"], shap_df["SHAP Value"], color=colors)
+        ax.barh(shap_df["Feature"], shap_df["SHAP Value"], color=colors)
+        ax.axvline(0, color="black", linewidth=0.8)
+        ax.set_title("Feature contributions to predicted price", fontsize=11)
+        ax.set_xlabel("SHAP Value (impact on price)")
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close()
+
+    with col2:
+        st.markdown("### 📊 Feature Impact (SHAP Bar)")
+        fig2, ax2 = plt.subplots(figsize=(8, 5))
+        colors2 = ["#e94560" if v > 0 else "#2ecc71" for v in shap_df["SHAP Value"]]
+        ax2.barh(shap_df["Feature"], shap_df["SHAP Value"], color=colors2)
         ax2.axvline(0, color="black", linewidth=0.8)
-        ax2.set_title("Red = increases price | Green = decreases price",
-                      fontsize=10)
-        ax2.set_xlabel("SHAP Value (₹ impact)")
+        ax2.set_title("Red = increases price | Green = decreases price", fontsize=10)
+        ax2.set_xlabel("SHAP Value (impact on price)")
         plt.tight_layout()
         st.pyplot(fig2)
         plt.close()
@@ -144,11 +144,11 @@ if predict_btn:
     with c1:
         st.success("**Factors pushing price UP** 📈")
         for _, row in top_pos.iterrows():
-            st.write(f"• **{row['Feature']}** → +₹{abs(row['SHAP Value']):,.0f}")
+            st.write(f"• **{row['Feature']}** → +Rs {abs(row['SHAP Value']):,.0f}")
     with c2:
         st.error("**Factors pushing price DOWN** 📉")
         for _, row in top_neg.iterrows():
-            st.write(f"• **{row['Feature']}** → -₹{abs(row['SHAP Value']):,.0f}")
+            st.write(f"• **{row['Feature']}** → -Rs {abs(row['SHAP Value']):,.0f}")
 
 else:
     # ── Landing state ─────────────────────────────────────────────
@@ -165,7 +165,7 @@ else:
     c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Algorithm",      "XGBoost")
     c2.metric("R² Score",       "0.9359")
-    c3.metric("RMSE",           "₹22,123")
+    c3.metric("RMSE",           "Rs 22,123")
     c4.metric("MAPE",           "5.31%")
     c5.metric("Training Rows",  "32,671")
 
